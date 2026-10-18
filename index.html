@@ -1,0 +1,858 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Virtual Lab Traffic Monitor</title>
+
+<style>
+:root {
+  --bg: #07111f;
+  --panel: #101e31;
+  --line: #24364e;
+  --text: #edf4ff;
+  --muted: #9aacc4;
+  --blue: #63a7ff;
+  --green: #38d9a9;
+  --amber: #ffbf69;
+  --red: #ff7185;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  min-height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  background:
+    radial-gradient(ellipse at top left, #163765, transparent 38%),
+    radial-gradient(ellipse at bottom right, #102a48, transparent 35%),
+    var(--bg);
+  color: var(--text);
+  padding: 28px;
+}
+
+.container {
+  max-width: 1120px;
+  margin: auto;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.logo {
+  width: 48px;
+  height: 48px;
+  border-radius: 15px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, #3989ff, #795dff);
+  font-size: 24px;
+}
+
+.eyebrow {
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--blue);
+  font-weight: 800;
+  margin-bottom: 5px;
+}
+
+h1 {
+  font-size: clamp(23px, 3vw, 31px);
+}
+
+.subheading {
+  color: var(--muted);
+  font-size: 13px;
+  margin-top: 6px;
+  line-height: 1.6;
+}
+
+.live-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #285a53;
+  background: #102b2a;
+  color: #8af0d0;
+  border-radius: 999px;
+  padding: 10px 14px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.dot {
+  width: 7px;
+  height: 7px;
+  background: var(--green);
+  border-radius: 50%;
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.metric, .panel {
+  background: linear-gradient(145deg, #13243a, #0d192a);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  box-shadow: 0 18px 45px #00000016;
+}
+
+.metric {
+  padding: 20px 22px;
+}
+
+.metric-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.metric-icon {
+  width: 35px;
+  height: 35px;
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+  background: #1c3554;
+  font-size: 17px;
+}
+
+.metric-value {
+  font-size: 30px;
+  font-weight: 800;
+  margin: 14px 0 5px;
+}
+
+.metric-note {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.main-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 20px;
+  align-items: stretch;
+}
+
+.panel {
+  padding: 25px;
+  margin-bottom: 20px;
+}
+
+.panel-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.panel-heading h2 {
+  font-size: 17px;
+}
+
+.panel-heading p {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 6px;
+  line-height: 1.5;
+}
+
+.tag {
+  font-size: 10px;
+  text-transform: uppercase;
+  color: #b9d6ff;
+  border: 1px solid #29466b;
+  background: #142b47;
+  border-radius: 7px;
+  padding: 7px 9px;
+  white-space: nowrap;
+}
+
+label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: #cbd8e9;
+  margin-bottom: 9px;
+}
+
+.input-row {
+  display: flex;
+  gap: 10px;
+}
+
+input[type="number"] {
+  min-width: 0;
+  flex: 1;
+  background: #091524;
+  border: 1px solid #30445e;
+  border-radius: 12px;
+  color: var(--text);
+  padding: 14px 15px;
+  font-size: 15px;
+  outline: none;
+}
+
+input[type="number"]:focus {
+  border-color: var(--blue);
+}
+
+button {
+  border: 0;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #3989ff, #6a69ff);
+  color: white;
+  padding: 0 18px;
+  font-weight: 800;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.examples {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.7;
+  margin-top: 12px;
+}
+
+.error {
+  display: none;
+  margin-top: 15px;
+  padding: 12px;
+  border: 1px solid #743947;
+  background: #321b27;
+  color: #ffb3bf;
+  border-radius: 10px;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.result {
+  display: none;
+  margin-top: 20px;
+  border: 1px solid var(--line);
+  background: #0a1727;
+  border-radius: 15px;
+  padding: 19px;
+}
+
+.result-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1.6px;
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.result-line {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 12px;
+}
+
+.status-icon {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  background: #19314b;
+  font-size: 23px;
+}
+
+.status {
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.count {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 5px;
+}
+
+.low { color: var(--green); }
+.moderate { color: var(--amber); }
+.high { color: var(--red); }
+
+.thresholds {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.threshold {
+  border: 1px solid var(--line);
+  background: #0b1828;
+  border-radius: 12px;
+  padding: 13px;
+}
+
+.threshold strong {
+  display: block;
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+
+.threshold span {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.chart-wrap {
+  height: 210px;
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  padding: 16px 4px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.chart-empty {
+  width: 100%;
+  align-self: center;
+  text-align: center;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.bar-group {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.bar {
+  width: min(44px, 75%);
+  min-height: 4px;
+  border-radius: 8px 8px 2px 2px;
+  background: linear-gradient(180deg, #72b7ff, #4f70f4);
+}
+
+.bar-label {
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.chart-caption {
+  display: flex;
+  justify-content: space-between;
+  color: var(--muted);
+  font-size: 11px;
+  margin-top: 12px;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 440px;
+}
+
+th {
+  text-align: left;
+  color: #8196b2;
+  font-size: 10px;
+  text-transform: uppercase;
+  padding: 0 12px 13px;
+}
+
+td {
+  padding: 13px 12px;
+  border-top: 1px solid #22344a;
+  font-size: 12px;
+  color: #dce7f7;
+}
+
+.status-badge {
+  display: inline-flex;
+  padding: 5px 8px;
+  border-radius: 7px;
+  font-size: 10px;
+  font-weight: 800;
+  background: #102f2a;
+  color: var(--green);
+}
+
+.status-badge.moderate {
+  background: #382b19;
+  color: var(--amber);
+}
+
+.status-badge.high {
+  background: #3b202b;
+  color: var(--red);
+}
+
+.empty-row {
+  text-align: center !important;
+  color: var(--muted) !important;
+  padding: 22px !important;
+}
+
+.panel-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.small-button {
+  background: #172b43;
+  border: 1px solid #30445e;
+  color: #c8d9ef;
+  padding: 8px 10px;
+  font-size: 11px;
+}
+
+.footer {
+  text-align: center;
+  color: #71849e;
+  font-size: 11px;
+  line-height: 1.8;
+  margin: 8px 0 4px;
+}
+
+@media (max-width: 800px) {
+  body { padding: 18px; }
+  .main-grid { grid-template-columns: 1fr; }
+  .metrics { gap: 10px; }
+  .metric { padding: 16px; }
+}
+
+@media (max-width: 520px) {
+  body { padding: 13px; }
+  .metrics { grid-template-columns: 1fr; }
+  .metric {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .metric-top { flex: 1; }
+  .metric-value { margin: 0; font-size: 23px; }
+  .metric-note { display: none; }
+  .input-row { flex-direction: column; }
+  button { padding: 14px; }
+  .panel { padding: 18px; }
+  .thresholds { gap: 7px; }
+  .threshold { padding: 10px 8px; }
+}
+</style>
+</head>
+
+<body>
+<main class="container">
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">📊</div>
+      <div>
+        <div class="eyebrow">Cloud monitoring · AWS Lambda</div>
+        <h1>Virtual Lab Traffic Monitor</h1>
+        <p class="subheading">
+          Real-time traffic classification for your virtual lab environment.
+        </p>
+      </div>
+    </div>
+    <div class="live-pill"><span class="dot"></span> LAMBDA ENDPOINT CONFIGURED</div>
+  </header>
+
+  <section class="metrics">
+    <article class="metric">
+      <div class="metric-top">
+        <span>Latest traffic count</span>
+        <span class="metric-icon">↗</span>
+      </div>
+      <div>
+        <div class="metric-value" id="latestMetric">—</div>
+        <div class="metric-note">Most recent successful analysis</div>
+      </div>
+    </article>
+
+    <article class="metric">
+      <div class="metric-top">
+        <span>Latest classification</span>
+        <span class="metric-icon">◉</span>
+      </div>
+      <div>
+        <div class="metric-value" id="latestStatus" style="font-size:21px">Waiting</div>
+        <div class="metric-note">Calculated by AWS Lambda</div>
+      </div>
+    </article>
+
+    <article class="metric">
+      <div class="metric-top">
+        <span>Checks this session</span>
+        <span class="metric-icon">⌁</span>
+      </div>
+      <div>
+        <div class="metric-value" id="checksMetric">0</div>
+        <div class="metric-note">Saved in this browser only</div>
+      </div>
+    </article>
+  </section>
+
+  <div class="main-grid">
+    <section class="panel">
+      <div class="panel-heading">
+        <div>
+          <h2>Traffic analysis</h2>
+          <p>Enter a non-negative whole number and send it to your cloud function.</p>
+        </div>
+        <span class="tag">Live request</span>
+      </div>
+
+      <form id="trafficForm">
+        <label for="trafficCount">Traffic count</label>
+        <div class="input-row">
+          <input type="number" id="trafficCount" min="0"
+            max="9007199254740991" step="1"
+            placeholder="e.g. 150" required>
+          <button type="submit" id="checkButton">Analyze traffic →</button>
+        </div>
+      </form>
+
+      <p class="examples">
+        Try 25 for Low, 75 for Moderate, or 150 for High traffic.
+      </p>
+
+      <div id="errorMessage" class="error" role="alert"></div>
+
+      <section id="result" class="result" aria-live="polite">
+        <p class="result-label">Analysis result</p>
+        <div class="result-line">
+          <div id="statusIcon" class="status-icon">📊</div>
+          <div>
+            <h2 id="trafficStatus" class="status">Low Traffic</h2>
+            <p id="trafficDetails" class="count">Traffic Count: 0</p>
+          </div>
+        </div>
+      </section>
+
+      <div class="thresholds">
+        <div class="threshold">
+          <strong class="low">● Low</strong>
+          <span>0–50 requests</span>
+        </div>
+        <div class="threshold">
+          <strong class="moderate">● Moderate</strong>
+          <span>51–100 requests</span>
+        </div>
+        <div class="threshold">
+          <strong class="high">● High</strong>
+          <span>Above 100</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-heading">
+        <div>
+          <h2>Recent activity</h2>
+          <p>Traffic counts from your latest successful checks.</p>
+        </div>
+        <span class="tag">Session chart</span>
+      </div>
+      <div id="chart" class="chart-wrap">
+        <div class="chart-empty">Run an analysis to populate the chart.</div>
+      </div>
+      <div class="chart-caption">
+        <span>Earlier checks</span>
+        <span>Latest check →</span>
+      </div>
+    </section>
+  </div>
+
+  <section class="panel">
+    <div class="panel-heading">
+      <div>
+        <h2>Analysis history</h2>
+        <p>Recent checks recorded by this browser. Cloud database history can be connected in the next step.</p>
+      </div>
+      <div class="panel-actions">
+        <button type="button" class="small-button" id="clearHistory">Clear session</button>
+      </div>
+    </div>
+
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Traffic count</th>
+            <th>Classification</th>
+          </tr>
+        </thead>
+        <tbody id="historyBody">
+          <tr>
+            <td colspan="3" class="empty-row">
+              No analyses yet. Run your first check above.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer class="footer">
+    Virtual Lab Traffic Function · AWS Lambda · Python 3.12<br>
+    Dashboard interface · Browser session history is not yet stored in DynamoDB.
+  </footer>
+
+</main>
+
+<script>
+const LAMBDA_URL =
+  "https://jnftrjfoja7gue7k4wsjpc5vcm0vgmcq.lambda-url.us-east-1.on.aws/ ";
+
+const form = document.getElementById("trafficForm");
+const input = document.getElementById("trafficCount");
+const button = document.getElementById("checkButton");
+const result = document.getElementById("result");
+const statusText = document.getElementById("trafficStatus");
+const details = document.getElementById("trafficDetails");
+const statusIcon = document.getElementById("statusIcon");
+const errorMessage = document.getElementById("errorMessage");
+const historyBody = document.getElementById("historyBody");
+const chart = document.getElementById("chart");
+
+const records = [];
+
+form.addEventListener("submit", async function(event) {
+  event.preventDefault();
+
+  const rawValue = input.value.trim();
+  const count = Number(rawValue);
+
+  errorMessage.style.display = "none";
+  result.style.display = "none";
+
+  if (
+    rawValue === "" ||
+    !Number.isSafeInteger(count) ||
+    count < 0
+  ) {
+    showError("Please enter a valid non-negative whole number.");
+    return;
+  }
+
+  button.disabled = true;
+  button.textContent = "Analyzing…";
+
+  try {
+    const url = LAMBDA_URL + "?traffic_count=" +
+      encodeURIComponent(count);
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: { "Accept": "application/json" }
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "The AWS request failed.");
+    }
+
+    if (!data.traffic_status) {
+      throw new Error(
+        "The Lambda response did not contain a traffic status."
+      );
+    }
+
+    const record = {
+      count: Number(data.traffic_count ?? count),
+      status: data.traffic_status,
+      time: new Date()
+    };
+
+    records.push(record);
+    renderResult(record);
+    renderDashboard();
+
+  } catch (error) {
+    console.error("Traffic analysis error:", error);
+    showError(
+      "Could not connect to AWS Lambda. Check your Function URL " +
+      "and CORS settings. Details: " + error.message
+    );
+  } finally {
+    button.disabled = false;
+    button.textContent = "Analyze traffic →";
+  }
+});
+
+function renderResult(record) {
+  statusText.textContent = record.status;
+  details.textContent = "Traffic Count: " + record.count;
+  statusText.className = "status";
+
+  if (record.status === "High Traffic") {
+    statusText.classList.add("high");
+    statusIcon.textContent = "🔴";
+  } else if (record.status === "Moderate Traffic") {
+    statusText.classList.add("moderate");
+    statusIcon.textContent = "🟠";
+  } else {
+    statusText.classList.add("low");
+    statusIcon.textContent = "🟢";
+  }
+
+  result.style.display = "block";
+}
+
+function renderDashboard() {
+  const latest = records[records.length - 1];
+
+  document.getElementById("latestMetric").textContent =
+    latest.count.toLocaleString();
+
+  const latestStatus = document.getElementById("latestStatus");
+  latestStatus.textContent = latest.status;
+  latestStatus.className =
+    "metric-value " + classFor(latest.status);
+
+  document.getElementById("checksMetric").textContent =
+    records.length;
+
+  historyBody.innerHTML = "";
+
+  records.slice().reverse().slice(0, 10).forEach(record => {
+    const tr = document.createElement("tr");
+    const time = document.createElement("td");
+    const count = document.createElement("td");
+    const status = document.createElement("td");
+
+    time.textContent = record.time.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit"
+    });
+
+    count.textContent = record.count.toLocaleString();
+
+    const badge = document.createElement("span");
+    badge.className = "status-badge " + classFor(record.status);
+    badge.textContent = record.status;
+
+    status.appendChild(badge);
+    tr.append(time, count, status);
+    historyBody.appendChild(tr);
+  });
+
+  renderChart();
+}
+
+function renderChart() {
+  chart.innerHTML = "";
+  const visible = records.slice(-7);
+
+  if (!visible.length) {
+    chart.innerHTML =
+      '<div class="chart-empty">Run an analysis to populate the chart.</div>';
+    return;
+  }
+
+  const max = Math.max(100, ...visible.map(r => r.count));
+
+  visible.forEach((record, index) => {
+    const group = document.createElement("div");
+    group.className = "bar-group";
+
+    const bar = document.createElement("div");
+    bar.className = "bar";
+    bar.style.height =
+      Math.max(4, (record.count / max) * 155) + "px";
+
+    if (record.status === "High Traffic") {
+      bar.style.background =
+        "linear-gradient(180deg,#ff8da0,#e84d70)";
+    } else if (record.status === "Moderate Traffic") {
+      bar.style.background =
+        "linear-gradient(180deg,#ffd18a,#d98a32)";
+    }
+
+    const label = document.createElement("div");
+    label.className = "bar-label";
+    label.textContent =
+      "#" + (records.length - visible.length + index + 1);
+
+    group.append(bar, label);
+    chart.appendChild(group);
+  });
+}
+
+function classFor(status) {
+  if (status === "High Traffic") return "high";
+  if (status === "Moderate Traffic") return "moderate";
+  return "low";
+}
+
+function showError(message) {
+  errorMessage.textContent = message;
+  errorMessage.style.display = "block";
+}
+
+document.getElementById("clearHistory").addEventListener("click", function() {
+  records.length = 0;
+
+  document.getElementById("latestMetric").textContent = "—";
+
+  const latestStatus = document.getElementById("latestStatus");
+  latestStatus.textContent = "Waiting";
+  latestStatus.className = "metric-value";
+
+  document.getElementById("checksMetric").textContent = "0";
+
+  historyBody.innerHTML =
+    '<tr><td colspan="3" class="empty-row">' +
+    'No analyses yet. Run your first check above.</td></tr>';
+
+  renderChart();
+  result.style.display = "none";
+  errorMessage.style.display = "none";
+});
+</script>
+</body>
+</html>
